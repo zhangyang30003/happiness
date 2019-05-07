@@ -1,0 +1,303 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Apr  1 09:12:26 2019
+
+@author: Administrator
+"""
+
+import warnings
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
+from sklearn.base import BaseEstimator, TransformerMixin, RegressorMixin, clone
+
+from sklearn.decomposition import PCA
+
+from sklearn.model_selection import GridSearchCV, RepeatedKFold, cross_val_score, cross_val_predict, KFold
+from sklearn.metrics import make_scorer,mean_squared_error
+
+from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor,AdaBoostRegressor
+from sklearn.linear_model import LinearRegression, Lasso, Ridge, ElasticNet
+from sklearn.svm import LinearSVR, SVR
+from sklearn.neighbors import KNeighborsRegressor
+from xgboost import XGBRegressor as XGBR
+import xgboost as xgb
+import joblib
+from sklearn.linear_model import LassoCV
+from sklearn.preprocessing import RobustScaler
+from sklearn.pipeline import make_pipeline
+
+
+warnings.filterwarnings('ignore')
+
+def plt_data_na():
+    all_data_na = (all_data.isnull().sum() / len(all_data)) * 100
+    all_data_na = all_data_na.drop(all_data_na[all_data_na == 0 ].index).sort_values(ascending = False)
+    f, ax = plt.subplots(figsize = (15,21))
+    plt.xticks(rotation = '90')
+    sns.barplot(x = all_data_na.index, y = all_data_na)
+    plt.xlabel('Features', fontsize=15)
+    plt.ylabel('Percent of missing values', fontsize=15)
+    plt.title('Percent missing data by feature', fontsize=15)
+    plt.show()
+
+train = pd.read_csv(r"C:\Users\Administrator\Desktop\AI_learning\happniess_dig\happiness_train_complete.csv")
+test = pd.read_csv(r"C:\Users\Administrator\Desktop\AI_learning\happniess_dig\happiness_test_complete.csv")
+
+all_data = pd.concat([train, test], axis=0, ignore_index = False)
+
+
+
+threshold = 0.1
+corr_matrix = train.corr().abs()
+drop_col=corr_matrix[corr_matrix['happiness']<threshold].index
+all_data.drop(drop_col,axis=1,inplace=True)
+
+#Id = test[['id']]
+Y_train = train[['happiness']]
+train = train.drop('happiness', axis = 1)
+Y_train[Y_train < 0] = 0
+#y_train = y_train.astype(str)
+#y_train = pd.get_dummies(y_train)
+
+#all_data = all_data.drop('id', axis = 1)
+all_data = all_data.drop('survey_time', axis =1)
+all_data = all_data.drop('edu_other', axis =1)
+all_data = all_data.drop('invest_other', axis =1)
+all_data = all_data.drop('property_other', axis =1)
+#all_data = all_data.drop('join_party', axis =1)
+#all_data = all_data.drop('s_work_status', axis =1)
+#all_data = all_data.drop('work_status', axis =1)
+#all_data = all_data.drop('work_type', axis =1)
+#all_data = all_data.drop('s_work_type', axis =1)
+#all_data = all_data.drop('work_manage', axis =1)
+#all_data = all_data.drop('m_birth', axis =1)
+#all_data = all_data.drop('trust_11', axis =1)
+#all_data = all_data.drop('trust_12', axis =1)
+#均值填补
+#work_yr = all_data[['work_yr']]
+#work_yr = work_yr.fillna(work_yr.mean())
+#all_data = all_data.drop('work_yr', axis = 1)
+#all_data = pd.concat([all_data, work_yr], axis=1, ignore_index = False)
+
+#edu_yr = all_data[['edu_yr']]
+#edu_yr = edu_yr.fillna(edu_yr.mean())
+#all_data = all_data.drop('edu_yr', axis = 1)
+#all_data = pd.concat([all_data, edu_yr], axis=1, ignore_index = False)
+#
+#s_income = all_data[['s_income']]
+#s_income = s_income.fillna(s_income.mean())
+#all_data = all_data.drop('s_income', axis = 1)
+#all_data = pd.concat([all_data, s_income], axis=1, ignore_index = False)
+
+#s_birth = all_data[['s_birth']]
+#s_birth = s_birth.fillna(s_birth.mean())
+#all_data = all_data.drop('s_birth', axis = 1)
+#all_data = pd.concat([all_data, s_birth], axis=1, ignore_index = False)
+
+#minor_child = all_data[['minor_child']]
+#minor_child = minor_child.fillna(minor_child.mean())
+#all_data = all_data.drop('minor_child', axis = 1)
+#all_data = pd.concat([all_data, minor_child], axis=1, ignore_index = False)
+
+#marital_1st = all_data[['marital_1st']]
+#marital_1st = marital_1st.fillna(marital_1st.mean())
+#all_data = all_data.drop('marital_1st', axis = 1)
+#all_data = pd.concat([all_data, marital_1st], axis=1, ignore_index = False)
+
+#family_income = all_data[['family_income']]
+#family_income = family_income.fillna(family_income.mean())
+#all_data = all_data.drop('family_income', axis = 1)
+#all_data = pd.concat([all_data, family_income], axis=1, ignore_index = False)
+
+
+
+
+
+
+
+#0填补
+#marital_now = all_data[['marital_now']]
+#marital_now = marital_now.fillna(0)
+#all_data = all_data.drop('marital_now', axis = 1)
+#all_data = pd.concat([all_data, marital_now], axis=1, ignore_index = False)
+
+#众数填补
+#s_work_exper = all_data[['s_work_exper']]
+#s_work_exper_mode = (s_work_exper.mode()).iat[0,0]
+#s_work_exper = s_work_exper.fillna(s_work_exper_mode)
+#all_data = all_data.drop('s_work_exper', axis = 1)
+#all_data = pd.concat([all_data, s_work_exper], axis=1, ignore_index = False)
+
+s_edu = all_data[['s_edu']]
+s_edu_mode = (s_edu.mode()).iat[0,0]
+s_edu = s_edu.fillna(s_edu_mode)
+all_data = all_data.drop('s_edu', axis = 1)
+all_data = pd.concat([all_data, s_edu], axis=1, ignore_index = False)
+
+#s_hukou = all_data[['s_hukou']]
+#s_hukou_mode = (s_hukou.mode()).iat[0,0]
+#s_hukou = s_hukou.fillna(s_hukou_mode)
+#all_data = all_data.drop('s_hukou', axis = 1)
+#all_data = pd.concat([all_data, s_hukou], axis=1, ignore_index = False)
+
+#s_political = all_data[['s_political']]
+#s_political_mode = (s_political.mode()).iat[0,0]
+#s_political = s_political.fillna(s_political_mode)
+#all_data = all_data.drop('s_political', axis = 1)
+#all_data = pd.concat([all_data, s_political], axis=1, ignore_index = False)
+
+#edu_status = all_data[['edu_status']]
+#edu_status_mode = (edu_status.mode()).iat[0,0]
+#edu_status = edu_status.fillna(edu_status_mode)
+#all_data = all_data.drop('edu_status', axis = 1)
+#all_data = pd.concat([all_data, edu_status], axis=1, ignore_index = False)
+
+#social_friend = all_data[['social_friend']]
+#social_friend_mode = (social_friend.mode()).iat[0,0]
+#social_friend = social_friend.fillna(edu_status_mode)
+#all_data = all_data.drop('social_friend', axis = 1)
+#all_data = pd.concat([all_data, social_friend], axis=1, ignore_index = False)
+
+#social_neighbor = all_data[['social_neighbor']]
+#social_neighbor_mode = (social_neighbor.mode()).iat[0,0]
+#social_neighbor = social_neighbor.fillna(edu_status_mode)
+#all_data = all_data.drop('social_neighbor', axis = 1)
+#all_data = pd.concat([all_data, social_neighbor], axis=1, ignore_index = False)
+
+#hukou_loc = all_data[['hukou_loc']]
+#hukou_loc_mode = (hukou_loc.mode()).iat[0,0]
+#hukou_loc = hukou_loc.fillna(edu_status_mode)
+#all_data = all_data.drop('hukou_loc', axis = 1)
+#all_data = pd.concat([all_data, hukou_loc], axis=1, ignore_index = False)
+
+#b= all_data.isnull().sum()
+#plt_data_na()
+
+#all_data_mode = all_data.mode()
+#all_data_mode = all_data_mode.iloc[[0],:]
+
+#所有小于0的数替换为0，去除错误参数
+all_data[all_data < 0] = 0
+#添加特征
+#all_data['kids'] = (all_data['son'] + all_data['daughter'])
+
+
+#
+#one-hot
+#取出one_hot处理列
+
+one_hot_col = ['survey_type','province','city','county','gender','nationality',
+                        'religion','religion_freq','edu','political','health','health_problem','depression'
+                        ,'hukou','media_1','media_2','media_3','media_4','media_5','media_6'
+                        ,'leisure_1','leisure_2','leisure_3','leisure_4','leisure_5','leisure_6','leisure_7','leisure_8'
+                        ,'leisure_9','leisure_10','leisure_11','leisure_12','socialize','relax','learn',
+                        'socia_outing','equity','class','class_10_before','class_10_after','class_14','work_exper'
+                        ,'insur_1','insur_2','insur_3','insur_4','family_m','family_status','car'
+                        ,'invest_0','invest_1','invest_2','invest_3','invest_4','invest_5','invest_6','invest_7','invest_8'
+                        ,'marital','f_edu','f_political','f_work_14','m_edu','m_political','m_work_14','status_peer'
+                        ,'status_3_before', 'view', 'inc_ability','trust_1','trust_2','trust_3','trust_4','trust_5','trust_6'
+                        ,'trust_7','trust_8','trust_9','trust_10','trust_13','neighbor_familiarity'
+                        ,'hukou_loc','social_neighbor','social_friend','edu_status','s_political','s_hukou','s_edu'
+                        ,'s_work_exper',]
+numerical_col = ['income','floor_area','height_cm','weight_jin','house','son','daughter','f_birth', 'inc_exp'
+                 ,'public_service_1','public_service_2','public_service_3','public_service_4','public_service_5'
+                 ,'public_service_6','public_service_7','public_service_8','public_service_9','work_yr','s_income'
+                 ,'s_birth','minor_child', 'marital_1st', 'family_income','marital_now','edu_yr','kids','birth']
+one_hot_col = all_data[one_hot_col]
+numeric_cols = all_data[numerical_col]
+rest_col = all_data.drop(one_hot_col, axis = 1)
+rest_col = rest_col.drop(numerical_col, axis = 1)
+#one_hot_col = pd.DataFrame(OneHotEncoder(categories = 'auto').fit_transform(one_hot_col).toarray())
+one_hot_col = one_hot_col.astype(str)
+one_hot_col_ = pd.get_dummies(one_hot_col)
+#标准化
+#numerical_col_std = pd.DataFrame(StandardScaler().fit_transform(numerical_col))
+numeric_col_means = numeric_cols.mean()
+numeric_col_std = numeric_cols.std()
+numeric_cols = (numeric_cols - numeric_col_means) / numeric_col_std
+
+#
+final_features = pd.concat([one_hot_col_, numeric_cols, rest_col], axis=1, ignore_index = False)
+
+final_features = PCA(600).fit_transform(final_features)
+
+
+X_train = final_features[:8000]
+x_test = final_features[8000:]
+
+x_train, x_val, y_train, y_val = train_test_split(X_train, Y_train, test_size = 0.2, shuffle=True, random_state=42)
+#
+#
+###################################################################
+##pca_line = PCA().fit(final_features)
+##plt.plot(range(0,827,1),np.cumsum(pca_line.explained_variance_ratio_))
+##plt.xticks(range(1,800,100)) #这是为了限制坐标轴显示为整数
+##plt.xlabel("number of components after dimension reduction")
+##plt.ylabel("cumulative explained variance")
+##plt.show()
+######################################################################
+#kfolds = KFold(n_splits=10, shuffle=True, random_state=42)
+## rmsle
+#def mse(y, y_pred):
+#    return mean_squared_error(y, y_pred)
+#
+## build our model scoring function
+#def cv_mse(model):
+#    rmse = -cross_val_score(model, x_train, y_train,
+#                                    scoring="neg_mean_squared_error",
+#                                    cv=kfolds)
+#    return (rmse)
+#
+#
+##model = RandomForestRegressor(
+##                                n_estimators = 200
+##                                )
+##score = cv_mse(model)
+##print("score: {:.4f} ({:.4f})\n".format(score.mean(), score.std()))
+##model.fit(x_train,y_train)
+##print('MsE score on val data:')
+##print(mse(y_val, model.predict(x_val))) 
+#
+##
+##model= Lasso( 
+##                    alpha = 94/1e6  #0.105
+##                    ,normalize=True
+##                    , max_iter=1e6
+##                )
+##score = cv_mse(model)
+##print("score: {:.4f} ({:.4f})\n".format(score.mean(), score.std()))
+##model.fit(x_train,y_train)
+##print('MsE score on val data:')
+##print(mse(y_val, model.predict(x_val))) 
+#
+#
+##model = make_pipeline(RobustScaler(), SVR(C= 300, epsilon= 600/10000, gamma=10/10000))
+##score = cv_mse(model)
+##print("score: {:.4f} ({:.4f})\n".format(score.mean(), score.std()))
+##model.fit(x_train,y_train)
+##print('MsE score on val data:')
+##print(mse(y_val, model.predict(x_val))) 
+#
+#
+#model = LinearRegression()
+#score = cv_mse(model)
+#print("score: {:.4f} ({:.4f})\n".format(score.mean(), score.std()))
+#model.fit(x_train,y_train)
+#print('MsE score on val data:')
+#print(mse(y_val, model.predict(x_val))) 
+#
+
+
+
+
+
+
+
+
+
+
+
